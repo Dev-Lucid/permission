@@ -1,20 +1,37 @@
 <?php
-namespace Lucid\Component\Permissions;
+namespace Lucid\Component\Permission;
 
-class Permissions implements PermissionsInterface
+class Permission implements PermissionInterface
 {
     public $idField = 'user_id';
+    protected $session;
+
+    public function __construct($session = null)
+    {
+        if (is_null($session) === true) {
+            $this->session = new \Lucid\Component\Store\Store($_SESSION);
+        } else {
+            if (is_array($session) === true) {
+                $this->session = new \Lucid\Component\Store\Store($_SESSION);
+            } else {
+                if (is_object($session) === false || in_array('Lucid\Component\Store\StoreInterface', class_implements($session)) === false) {
+                    throw new \Exception('Permission contructor parameter $session must either be null, or implement Lucid\Component\Store\StoreInterface. If null is passed, then an instance of Lucid\Component\Store\Store will be instantiated instead and use $_SESSION for its source.');
+                }
+                $this->session = $session;
+            }
+        }
+    }
 
     public function isLoggedIn(): bool
     {
-        $id = lucid::session()->int(self::$idField);
+        $id = $this->session->int(self::$idField);
         return ($id > 0);
     }
 
     public function requireLogin()
     {
         if ($this->isLoggedIn() === false) {
-            lucid::error()->permissionDenied();
+            throw new \Exception('User was not logged in, but previous action required login');
         }
         return $this;
     }
@@ -23,10 +40,7 @@ class Permissions implements PermissionsInterface
     {
         if (strpos($name, 'require_') === 0 && isset($parameters[0]) === true) {
             $name = substr($name, 8);
-            $value = lucid::session()->get($name);
-            if ($parameters[0]  != $value) {
-                lucid::error()->permissionDenied();
-            }
+            $this->requireSessionValue($name, $parameters[0]);
             return $this;
         } else {
             throw new \Exception('Unknown security function call: '.$name.'. The DevLucid\Security class does allow calls to undefined methods if the follow the pattern ->require_$variable($value); (ex: ->require_role_id(5)). When the security object is used in this way, it looks for an offset named $variable in lucid::$session, and throws an error if its value does not equal $value. Calling the security object in this manner requires that the function name you\'re accessing start with require_, and be passed 1 argument (the value to check against).');
@@ -35,14 +49,14 @@ class Permissions implements PermissionsInterface
 
     public function hasSessionValue(string $name, $value): bool
     {
-        $sessionValue = $this->get($name, null);
+        $sessionValue = $this->session->get($name, null);
         return ($value == $sessionValue);
     }
 
     public function requireSessionValue(string $name, $reqValue)
     {
-        if ($this->hasSession($name, $reqValue) === false) {
-            lucid::error()->permissionDenied();
+        if ($this->hasSessionValue($name, $reqValue) === false) {
+            throw new \Exception('Permission denied. Required session variable '.$name.' to have value '.$reqValue.', but had '.$this->session->get($name, null));
         }
     }
 
@@ -89,15 +103,15 @@ class Permissions implements PermissionsInterface
 
     public function getPermissionsList(): array
     {
-        if (isset(lucid::session()['permissions']) === false || is_array(lucid::session()['permissions']) === false) {
-            lucid::session()['permissions'] = [];
+        if ($this->session->is_set('permissions') === false || is_array($this->session->get('permissions')) === false) {
+            $this->session->set('permissions', []);
         }
-        return lucid::session()['permissions'];
+        return $this->session->get('permissions');
     }
 
     public function setPermissionsList(array $names=[])
     {
-        lucid::session()['permissions'] = $names;
+        $this->session->set('permissions', $names);
     }
 
     public function grant(string ...$names)

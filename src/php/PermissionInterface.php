@@ -1,7 +1,7 @@
 <?php
-namespace Lucid\Component\Permissions;
+namespace Lucid\Component\Permission;
 
-interface PermissionsInterface
+interface PermissionInterface
 {
     public function isLoggedIn(): bool;
     public function requireLogin();

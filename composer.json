@@ -1,7 +1,7 @@
 {
-  "name": "permissions",
+  "name": "permission",
   "type":"library",
-  "repo": "devlucid/permissions",
+  "repo": "devlucid/permission",
   "description": "",
   "authors": [
       {
@@ -16,10 +16,10 @@
       }
   ],
   "autoload": {
-      "psr-4": {"Lucid\\Component\\Permissions\\": "/src/php"}
+      "psr-4": {"Lucid\\Component\\Permission\\": "/src/php"}
   },
   "autoload-dev": {
-      "psr-4": {"Lucid\\Component\\Permissions\\": "/src/php"}
+      "psr-4": {"Lucid\\Component\\Permission\\": "/src/php"}
   },
   "license": "MIT",
   "bin": [
