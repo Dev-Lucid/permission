@@ -24,9 +24,10 @@ class Permission implements PermissionInterface
 
     public function isLoggedIn(): bool
     {
-        $id = $this->session->int(self::$idField);
+        $id = $this->session->int($this->idField);
         return ($id > 0);
     }
+
 
     public function requireLogin()
     {
@@ -34,6 +35,16 @@ class Permission implements PermissionInterface
             throw new \Exception('User was not logged in, but previous action required login');
         }
         return $this;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasSessionValue('role_id', 1);
+    }
+
+    public function requireAdmin()
+    {
+        $this->requireSessionValue('role_id', 1);
     }
 
     public function __call($name, $parameters)

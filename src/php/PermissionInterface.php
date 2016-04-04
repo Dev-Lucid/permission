@@ -12,6 +12,9 @@ interface PermissionInterface
     public function hasAnyPermission(string ...$names): bool;
     public function requireAnyPermission(string ...$names);
 
+    public function isAdmin(): bool;
+    public function requireAdmin();
+
     public function hasSessionValue(string $name, $value): bool;
     public function requireSessionValue(string $name, $reqValue);
 
