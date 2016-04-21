@@ -1,1 +1,2 @@
-# permissions
+# Permissions
+A permission handling library.

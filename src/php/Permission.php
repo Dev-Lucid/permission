@@ -9,13 +9,14 @@ class Permission implements PermissionInterface
     public function __construct($session = null)
     {
         if (is_null($session) === true) {
-            $this->session = new \Lucid\Component\Store\Store($_SESSION);
+            $this->session = new \Lucid\Component\Container\SessionContainer();
         } else {
             if (is_array($session) === true) {
-                $this->session = new \Lucid\Component\Store\Store($_SESSION);
+                $this->session = new \Lucid\Component\Container\Container();
+                $this->session->setSource($session);
             } else {
-                if (is_object($session) === false || in_array('Lucid\Component\Store\StoreInterface', class_implements($session)) === false) {
-                    throw new \Exception('Permission contructor parameter $session must either be null, or implement Lucid\Component\Store\StoreInterface. If null is passed, then an instance of Lucid\Component\Store\Store will be instantiated instead and use $_SESSION for its source.');
+                if (is_object($session) === false || in_array('Lucid\Component\Container\ContainerInterface', class_implements($session)) === false) {
+                    throw new \Exception('Permission contructor parameter $session must either be null, or implement Lucid\Component\Container\ContainerInterface. If null is passed, then an instance of Lucid\Component\Container\SessionContainer will be instantiated instead and use $_SESSION for its source.');
                 }
                 $this->session = $session;
             }
@@ -45,17 +46,6 @@ class Permission implements PermissionInterface
     public function requireAdmin()
     {
         $this->requireSessionValue('role_id', 1);
-    }
-
-    public function __call($name, $parameters)
-    {
-        if (strpos($name, 'require_') === 0 && isset($parameters[0]) === true) {
-            $name = substr($name, 8);
-            $this->requireSessionValue($name, $parameters[0]);
-            return $this;
-        } else {
-            throw new \Exception('Unknown security function call: '.$name.'. The DevLucid\Security class does allow calls to undefined methods if the follow the pattern ->require_$variable($value); (ex: ->require_role_id(5)). When the security object is used in this way, it looks for an offset named $variable in lucid::$session, and throws an error if its value does not equal $value. Calling the security object in this manner requires that the function name you\'re accessing start with require_, and be passed 1 argument (the value to check against).');
-        }
     }
 
     public function hasSessionValue(string $name, $value): bool
@@ -107,14 +97,14 @@ class Permission implements PermissionInterface
     public function requireAnyPermission(string ...$names)
     {
         if ($this->hasAnyPermission(...$names) === false) {
-            lucid::error()->permissionDenied();
+            throw new \Exception('User does not have any one of the required permissions: '.implode(', ', $names));
         }
         return $this;
     }
 
     public function getPermissionsList(): array
     {
-        if ($this->session->is_set('permissions') === false || is_array($this->session->get('permissions')) === false) {
+        if ($this->session->has('permissions') === false || is_array($this->session->get('permissions')) === false) {
             $this->session->set('permissions', []);
         }
         return $this->session->get('permissions');

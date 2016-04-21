@@ -23,6 +23,4 @@ interface PermissionInterface
 
     public function getPermissionsList(): array;
     public function setPermissionsList(array $names);
-
-    public function __call($name, $parameters);
 }

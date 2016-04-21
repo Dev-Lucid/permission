@@ -1,8 +1,7 @@
 {
-  "name": "permission",
+  "name": "dev-lucid/permission",
   "type":"library",
-  "repo": "devlucid/permission",
-  "description": "",
+  "description": "A permission handling library.",
   "authors": [
       {
           "name":     "Mike Thorn",
@@ -19,7 +18,14 @@
       "psr-4": {"Lucid\\Component\\Permission\\": "/src/php"}
   },
   "autoload-dev": {
-      "psr-4": {"Lucid\\Component\\Permission\\": "/src/php"}
+      "psr-4": {"Lucid\\Component\\Permission\\": "src/php"}
+  },
+  "require":{
+      "php": "^7.0",
+      "dev-lucid/container":"~1.0"
+  },
+  "require-dev": {
+      "phpunit/phpunit": "^5.0"
   },
   "license": "MIT",
   "bin": [
