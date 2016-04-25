@@ -3,29 +3,39 @@ namespace Lucid\Component\Permission;
 
 class Permission implements PermissionInterface
 {
-    public $idField = 'user_id';
+    protected $config = [
+        'idField' => 'user_id',
+    ];
     protected $session;
 
-    public function __construct($session = null)
+    public function __construct($config = null, $session = null)
     {
+        if (is_null($config) === false) {
+            if (is_array($config) === true) {
+                $this->config =& $config;
+            } elseif (is_object($config) === true && in_array('ArrayAccess', class_implements($config)) === true) {
+                $this->config = $config;
+            } else {
+                throw new \Exception('Permission constructor parameter $config must either be null, an array, or implement ArrayAccess.');
+            }
+        }
         if (is_null($session) === true) {
             $this->session = new \Lucid\Component\Container\SessionContainer();
         } else {
             if (is_array($session) === true) {
                 $this->session = new \Lucid\Component\Container\Container();
                 $this->session->setSource($session);
-            } else {
-                if (is_object($session) === false || in_array('Lucid\Component\Container\ContainerInterface', class_implements($session)) === false) {
-                    throw new \Exception('Permission contructor parameter $session must either be null, or implement Lucid\Component\Container\ContainerInterface. If null is passed, then an instance of Lucid\Component\Container\SessionContainer will be instantiated instead and use $_SESSION for its source.');
-                }
+            } elseif (is_object($session) === true && in_array('ArrayAccess', class_implements($session)) === true) {
                 $this->session = $session;
+            } else {
+                throw new \Exception('Permission constructor parameter $session must either be null, or implement ArrayAccess. If null is passed, then an instance of Lucid\Component\Container\SessionContainer will be instantiated instead and use $_SESSION for its source.');
             }
         }
     }
 
     public function isLoggedIn(): bool
     {
-        $id = $this->session->int($this->idField);
+        $id = $this->session->int($this->config['idField']);
         return ($id > 0);
     }
 
@@ -50,7 +60,10 @@ class Permission implements PermissionInterface
 
     public function hasSessionValue(string $name, $value): bool
     {
-        $sessionValue = $this->session->get($name, null);
+        if ($this->session->has($name) === false) {
+            return false;
+        }
+        $sessionValue = $this->session->get($name);
         return ($value == $sessionValue);
     }
 
@@ -76,7 +89,7 @@ class Permission implements PermissionInterface
     public function requirePermission(string ...$names)
     {
         if ($this->hasPermission(...$names) === false) {
-            lucid::error()->permissionDenied();
+            throw new \Exception('Permission denied. To perform this action, user must have the following permissions: '.implode(', ', $names));
         }
         return $this;
     }

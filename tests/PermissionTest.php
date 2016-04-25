@@ -11,7 +11,7 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
             'user_id'=>5,
             'role_id'=>2,
         ];
-        $this->permission = new Permission($fakeSession);
+        $this->permission = new Permission(null, $fakeSession);
     }
 
     public function testLoggedIn()
